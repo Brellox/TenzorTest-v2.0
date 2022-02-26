@@ -12,6 +12,7 @@ class MainPresenter: MainPresenterProtocol {
     weak var view: MainViewProtocol!
     var interactor: MainInteractorProtocol!
     var router: MainRouterProtocol!
+    var isLoading = false
     
     var dataArray: [Movie] = []
     var maxPages: Int = 10

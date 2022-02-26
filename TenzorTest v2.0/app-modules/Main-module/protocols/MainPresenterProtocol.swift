@@ -15,5 +15,6 @@ protocol MainPresenterProtocol:AnyObject {
     var maxPages: Int {get set}
     var currentPage: Int{get set}
     var currentGenre: Int{get set}
+    var isLoading: Bool {get set}
     func getMovies(genre: Int)
 }

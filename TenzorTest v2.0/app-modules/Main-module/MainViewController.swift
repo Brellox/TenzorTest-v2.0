@@ -13,7 +13,6 @@ class MainViewController: UIViewController, MainViewProtocol {
     let configurator: MainConfiguratorProtocol = MainConfigurator()
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var genreButton: UIButton!
-    private let refreshControl = UIRefreshControl()
     
     private let sectionInsets = UIEdgeInsets(
           top: 4.0,
@@ -31,8 +30,6 @@ class MainViewController: UIViewController, MainViewProtocol {
         self.title = "Movies"
         self.genreButton.setTitle("Select a genre", for: .normal)
         self.setCollection()
-
-        refreshControl.addTarget(self, action: #selector(refreshPostLineData(_:)), for: .valueChanged)
         
 
         
@@ -42,23 +39,26 @@ class MainViewController: UIViewController, MainViewProtocol {
         self.presenter.router.chooseGenre()
     }
     
-    @objc private func refreshPostLineData(_ sender: Any) {
-        self.presenter.currentPage += 1
-        self.presenter.getMovies(genre: self.presenter.currentGenre)
-    }
-    
         private func setCollection(){
             self.collectionView.register(UINib(nibName: "MovieCollectionCell", bundle: nil), forCellWithReuseIdentifier: "MovieCollectionCell")
             self.collectionView.dataSource = self
             self.collectionView.delegate = self
             self.collectionView.collectionViewLayout = UICollectionViewFlowLayout()
-            self.collectionView.refreshControl = refreshControl
         }
     
     }
     
     extension MainViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
     
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+                if (scrollView.contentOffset.y + scrollView.frame.size.height) > scrollView.contentSize.height - 50 {
+                    if !self.presenter.isLoading{
+                        self.presenter.isLoading = true
+                        self.presenter.getMovies(genre: self.presenter.currentGenre)
+                    }
+                }
+            }
+        
         func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
             return self.presenter.dataArray.count
         }
@@ -115,10 +115,12 @@ extension MainViewController: MainApiDelegate{
         DispatchQueue.main.async{
             if self.presenter.currentPage == 1 {
                 self.presenter.dataArray = []
+                self.collectionView.setContentOffset(.zero, animated: false)
             }
             self.presenter.dataArray.append(contentsOf: list)
             self.collectionView.reloadData()
-            self.refreshControl.endRefreshing()
+            self.presenter.currentPage += 1
+            self.presenter.isLoading = false
         }
     }
     
